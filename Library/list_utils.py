@@ -1,4 +1,4 @@
-from manim import Group, VGroup, MathTex
+from manim import Group, VGroup, MathTex, Text
 from typing import List
 from operator import itemgetter
 
@@ -28,4 +28,8 @@ class ExtendedVGroup(ExtendingGroupClass, VGroup):
 
 
 class ExtendedMathTex(ExtendingGroupClass, MathTex):
+    pass
+
+
+class ExtendedText(ExtendingGroupClass, Text):
     pass

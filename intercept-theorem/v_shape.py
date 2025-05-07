@@ -116,5 +116,5 @@ class VShape(InterceptShape):
             self.ZA_dash,
             self.AB,
             self.AB_dash,
-            self.points,
+            self.dots,
         )

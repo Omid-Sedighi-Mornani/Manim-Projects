@@ -91,7 +91,7 @@ class VShape(InterceptShape):
             self.label_B,
             self.label_A_dash,
             self.label_B_dash,
-        )
+        ).set_z_index(1)
 
         self.add(
             self.ray1,

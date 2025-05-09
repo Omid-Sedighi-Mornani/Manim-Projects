@@ -91,12 +91,6 @@ class IntroScene(AbstractScene):
             long_line_color=FIRE_RED,
         )
 
-        # colors = [OLIVE_GREEN, FIRE_RED, OLIVE_GREEN, FIRE_RED]
-        # indices = [0, 2, 4, 6]
-        # for index, color in zip(indices, colors):
-        #     self.first_formula[index].set_color(color)
-        #     self.second_formula[index].set_color(color)
-
         VGroup(self.first_formula, self.second_formula, self.parallel_formula).arrange(
             LEFT, buff=1
         ).to_edge(DOWN)
@@ -140,7 +134,7 @@ class IntroScene(AbstractScene):
 
         self.play(
             Create(v_shape.ZA_dash),
-            Create(x_shape.A_dash),
+            Create(x_shape.ZA_dash),
             Create(v_shape.ZB_dash),
             Create(x_shape.ZB_dash),
             Write(self.first_formula[[2, 6]]),
@@ -410,11 +404,96 @@ class SecondScene(AbstractScene):
         previous_formula.scale(10).set_opacity(0)
         self.play(
             self.table.animate.scale(0.1).move_to(ORIGIN),
-            self.second_formula.animate.scale(0.9).move_to(self.cell_locations[(2, 3)]),
+            self.second_formula.animate.scale(0.9).move_to(self.cell_locations[(3, 2)]),
             previous_formula.animate.scale(0.1).set_opacity(1),
             FadeOut(v_shape),
             FadeTransform(title, self.overview_title),
             FadeOut(self.parallel_formula),
+        )
+
+        self.wait(3)
+
+
+class ThirdScene(AbstractScene):
+    def construct(self):
+        previous_formulas = VGroup(
+            self.first_formula.copy().scale(0.9).move_to(self.cell_locations[(2, 2)]),
+            self.second_formula.copy().scale(0.9).move_to(self.cell_locations[(3, 2)]),
+        )
+
+        self.parallel_formula.to_edge(RIGHT)
+
+        title = Text(
+            "1.Strahlensatz - X-Figur", font="Patrick Hand", color=BROWN
+        ).to_edge(UP)
+
+        self.add(self.table, previous_formulas, self.overview_title)
+
+        self.wait()
+        self.play(
+            self.table.animate.scale(10, about_point=self.cell_locations[(2, 3)]),
+            FadeOut(previous_formulas),
+            FadeOut(self.overview_title),
+            ReplacementTransform(self.intercept_labels[0].copy(), title[:14]),
+            FadeIn(title[14]),
+            ReplacementTransform(self.shape_labels[1].copy(), title[15:]),
+        )
+
+        x_shape = XShape().move_to(ORIGIN)
+        self.play(Create(x_shape[:2]))
+        self.play(Create(x_shape[2:4]))
+        self.play(Write(x_shape[4:6]), Write(self.parallel_formula))
+        self.play(FadeIn(x_shape[*range(6, 14 + 1, 2)]))
+
+        short_label = MathTex("kurz", color=OLIVE_GREEN).next_to(
+            x_shape.ZA, direction=UP
+        )
+        long_label = MathTex("lang", color=FIRE_RED).next_to(
+            x_shape.ZA_dash, direction=DOWN
+        )
+
+        self.play(Create(x_shape.ZA), Create(x_shape.ZA_dash))
+        self.play(FadeIn(VGroup(short_label, long_label)))
+
+        self.play(Create(x_shape.ZB), Create(x_shape.ZB_dash))
+        self.play(
+            (s := short_label.copy()).animate.shift(1.3 * DOWN + 0.4 * RIGHT),
+            (l := long_label.copy()).animate.shift(1.5 * UP + 0.3 * LEFT),
+        )
+
+        self.wait()
+
+        self.play(
+            TransformMatchingShapes(short_label, self.general_formula[0]),
+            TransformMatchingShapes(long_label, self.general_formula[2]),
+            TransformMatchingShapes(s, self.general_formula[4]),
+            TransformMatchingShapes(l, self.general_formula[6]),
+        )
+
+        self.play(Write(self.general_formula[1, 3, 5]))
+
+        self.play(FadeIn(x_shape[*range(7, 15 + 1, 2)]))
+
+        distances = ExtendedVGroup(
+            x_shape.ZA, x_shape.ZA_dash, x_shape.ZB, x_shape.ZB_dash
+        )
+
+        for i, j in zip(range(0, 7, 2), range(4)):
+            self.play(Indicate(distances[j], scale_factor=1.2))
+            self.play(Transform(self.general_formula[i], self.first_formula[i]))
+            self.wait()
+
+        self.play(ReplacementTransform(self.general_formula, self.first_formula))
+        self.wait()
+
+        previous_formulas.scale(10).set_opacity(0)
+        self.play(
+            self.table.animate.scale(0.1).move_to(ORIGIN),
+            FadeOut(self.parallel_formula),
+            FadeOut(x_shape[:-3]),
+            self.first_formula.animate.scale(0.9).move_to(self.cell_locations[(2, 3)]),
+            previous_formulas.animate.scale(0.1).set_opacity(1),
+            FadeTransform(title, self.overview_title),
         )
 
         self.wait(3)

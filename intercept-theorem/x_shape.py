@@ -16,7 +16,7 @@ class XShape(InterceptShape):
             .move_to(self.ray1)
             .shift(LEFT)
         )
-        self.line2 = self.line1.copy().move_to(self.ray1).shift(RIGHT)
+        self.line2 = self.line1.copy().move_to(self.ray1).shift(1.3 * RIGHT)
         self.label_line1 = MathTex("g", color=self.ray_color).next_to(
             self.line1, direction=DOWN
         )
@@ -31,7 +31,7 @@ class XShape(InterceptShape):
             self.A, direction=UL, buff=0.15
         )
 
-        self.A_dash = Dot(self.ray1.point_from_proportion(0.79), color=self.dot_color)
+        self.A_dash = Dot(self.ray1.point_from_proportion(0.87), color=self.dot_color)
         self.label_A_dash = MathTex("A'", color=self.dot_color).next_to(
             self.A_dash, direction=DL, buff=0.1
         )
@@ -41,7 +41,7 @@ class XShape(InterceptShape):
             self.B, direction=UL, buff=0.15
         )
 
-        self.B_dash = Dot(self.ray2.point_from_proportion(0.79), color=self.dot_color)
+        self.B_dash = Dot(self.ray2.point_from_proportion(0.87), color=self.dot_color)
         self.label_B_dash = MathTex("B'", color=self.dot_color).next_to(
             self.B_dash, direction=UL, buff=0.1
         )
@@ -65,7 +65,7 @@ class XShape(InterceptShape):
             self.label_B,
             self.label_A_dash,
             self.label_B_dash,
-        )
+        ).set_z_index(1)
 
         self.add(
             self.ray1,
@@ -90,5 +90,5 @@ class XShape(InterceptShape):
             self.ZB_dash,
             self.AB,
             self.AB_dash,
-            self.points,
+            self.dots,
         )

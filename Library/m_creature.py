@@ -3,6 +3,7 @@ import sys
 
 sys.path.append("/Users/omidsedighi-mornani/Desktop/mathe/PROJECTS/Library")
 from speech_bubble import *
+from extended_colors import *
 
 
 class Test(Scene):
@@ -59,6 +60,18 @@ class MCreature(VMobject):
             "color_text": GRAY_A,
             "color_speechbubble": WHITE,
             "color_speechtext": WHITE,
+        },
+        "BROWN": {
+            "fillcolor_eyes": CREAM,
+            "color_eyes": BROWN,
+            "fillcolor_iris": BROWN,
+            "color_iris": BROWN,
+            "fillcolor_eyebrows": BROWN,
+            "color_eyebrows": BROWN,
+            "color_mshape": DARK_BROWN,
+            "color_text": DARK_BROWN,
+            "color_speechbubble": BROWN,
+            "color_speechtext": BROWN,
         },
     }
 

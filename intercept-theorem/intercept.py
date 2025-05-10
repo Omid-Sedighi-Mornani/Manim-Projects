@@ -5,19 +5,16 @@ import math
 sys.path.append("/Users/omidsedighi-mornani/Desktop/mathe/PROJECTS")
 from Library.m_creature import MCreature
 from Library.list_utils import ExtendedMathTex, ExtendedVGroup, ExtendedText
+from Library.extended_colors import *
 from v_shape import VShape
 from x_shape import XShape
-
-BROWN = ManimColor("#4e3629")
-OLIVE_GREEN = ManimColor("#6b8e23")
-FIRE_RED = ManimColor("#f44336")
 
 
 class AbstractScene(Scene):
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
-        self.camera.background_color = "#fdf6e3"
+        self.camera.background_color = CREAM
 
         self.overview_title = MarkupText(
             "Die Strahlensätze", font="Patrick Hand", color=BROWN, font_size=64
@@ -37,13 +34,27 @@ class AbstractScene(Scene):
             "{kurz", "\over", "lang}", "=", "{kurz", "\over", "lang}", color=BROWN
         ).to_edge(DOWN)
 
+        self.general_formula_reversed = ExtendedMathTex(
+            "{lang", "\over", "kurz}", "=", "{lang", "\over", "kurz}", color=BROWN
+        ).to_edge(DOWN)
+
+        self.general_formula_flipped = ExtendedMathTex(
+            "{kurz", "\over", "kurz}", "=", "{lang", "\over", "lang}", color=BROWN
+        ).to_edge(DOWN)
+
         for formula in VGroup(
             self.first_formula, self.general_formula, self.second_formula
         ):
             formula[0, 4].set_color(OLIVE_GREEN)
             formula[2, 6].set_color(FIRE_RED)
 
-        frame = SVGMobject("assets/test.svg")
+        for formula in VGroup(
+            self.general_formula_flipped, self.general_formula_reversed
+        ):
+            formula.set_color_by_tex("kurz", OLIVE_GREEN)
+            formula.set_color_by_tex("lang", FIRE_RED)
+
+        frame = SVGMobject("assets/whiteboard.svg")
         frame.stretch_to_fit_height(config.frame_height)
         frame.stretch_to_fit_width(config.frame_width)
         frame.set_z_index(-99)
@@ -327,6 +338,9 @@ class SecondScene(AbstractScene):
             ReplacementTransform(self.intercept_labels[1].copy(), title[:14]),
             FadeOut(self.overview_title),
             FadeOut(previous_formula),
+            previous_formula.animate.scale(
+                10, about_point=self.cell_locations[(2, 3)]
+            ).set_opacity(0),
             FadeIn(title[14]),
             ReplacementTransform(self.shape_labels[0].copy(), title[15:]),
         )
@@ -401,11 +415,12 @@ class SecondScene(AbstractScene):
             self.wait()
 
         self.play(ReplacementTransform(self.general_formula, self.second_formula))
-        previous_formula.scale(10).set_opacity(0)
         self.play(
             self.table.animate.scale(0.1).move_to(ORIGIN),
             self.second_formula.animate.scale(0.9).move_to(self.cell_locations[(3, 2)]),
-            previous_formula.animate.scale(0.1).set_opacity(1),
+            previous_formula.animate.scale(0.1)
+            .set_opacity(1)
+            .move_to(self.cell_locations[(2, 2)]),
             FadeOut(v_shape),
             FadeTransform(title, self.overview_title),
             FadeOut(self.parallel_formula),
@@ -432,7 +447,9 @@ class ThirdScene(AbstractScene):
         self.wait()
         self.play(
             self.table.animate.scale(10, about_point=self.cell_locations[(2, 3)]),
-            FadeOut(previous_formulas),
+            previous_formulas.animate.scale(
+                10, about_point=self.cell_locations[(2, 3)]
+            ).set_opacity(0),
             FadeOut(self.overview_title),
             ReplacementTransform(self.intercept_labels[0].copy(), title[:14]),
             FadeIn(title[14]),
@@ -486,16 +503,199 @@ class ThirdScene(AbstractScene):
         self.play(ReplacementTransform(self.general_formula, self.first_formula))
         self.wait()
 
-        previous_formulas.scale(10).set_opacity(0)
         self.play(
             self.table.animate.scale(0.1).move_to(ORIGIN),
             FadeOut(self.parallel_formula),
             FadeOut(x_shape[:-3]),
             self.first_formula.animate.scale(0.9).move_to(self.cell_locations[(2, 3)]),
-            previous_formulas.animate.scale(0.1).set_opacity(1),
+            *[
+                previous_formulas[idx]
+                .animate.scale(0.1)
+                .set_opacity(1)
+                .move_to(self.cell_locations[position])
+                for idx, position in enumerate([(2, 2), (3, 2)])
+            ],
             FadeTransform(title, self.overview_title),
         )
 
+        self.wait(3)
+
+
+class FourthScene(AbstractScene):
+    def construct(self):
+        previous_formulas = ExtendedVGroup(
+            self.first_formula.copy().scale(0.9).move_to(self.cell_locations[(2, 2)]),
+            self.first_formula.copy().scale(0.9).move_to(self.cell_locations[(2, 3)]),
+            self.second_formula.copy().scale(0.9).move_to(self.cell_locations[(3, 2)]),
+        )
+        self.add(self.table, self.overview_title, previous_formulas)
+
+        title = Text(
+            "2.Strahlensatz - X-Figur", font="Patrick Hand", color=BROWN
+        ).to_edge(UP)
+
+        self.play(
+            self.table.animate.scale(10, about_point=self.cell_locations[(3, 3)]),
+            ReplacementTransform(self.intercept_labels[1].copy(), title[:14]),
+            FadeIn(title[14]),
+            ReplacementTransform(self.shape_labels[1].copy(), title[15:]),
+            FadeOut(self.overview_title),
+            previous_formulas.animate.scale(
+                10, about_point=self.cell_locations[(3, 3)]
+            ).set_opacity(0),
+        )
+
+        self.wait()
+
+        x_shape = XShape().move_to(ORIGIN)
+
+        self.play(Create(x_shape[:4], run_time=2))
+        self.play(FadeIn(x_shape[4:6], self.parallel_formula.to_edge(RIGHT)))
+        self.play(FadeIn(x_shape[*range(6, 15 + 1)]))
+        self.wait()
+
+        self.play(Create(x_shape.ZB), Create(x_shape.AB))
+        self.play(Create(x_shape.ZB_dash), Create(x_shape.AB_dash))
+        self.play(FadeIn(self.general_formula))
+
+        self.play(Indicate(x_shape.ZB), Indicate(x_shape.ZB_dash))
+        self.play(
+            ReplacementTransform(self.general_formula[4, 6], self.second_formula[4, 6])
+        )
+
+        self.wait()
+        self.play(Indicate(x_shape.AB), Indicate(x_shape.AB_dash))
+        self.play(
+            ReplacementTransform(self.general_formula[0, 2], self.second_formula[0, 2])
+        )
+        self.play(ReplacementTransform(self.general_formula, self.second_formula))
+
+        self.wait()
+        second_formula_copy = self.second_formula.copy()
+
+        self.play(
+            self.second_formula[2, 6].animate.move_to(self.second_formula[0, 4]),
+            self.second_formula[0, 4].animate.move_to(self.second_formula[2, 6]),
+        )
+
+        elements = [
+            (x_shape.AB_dash, self.second_formula[2], RED_A),
+            (x_shape.AB, self.second_formula[0], GREEN_A),
+            (x_shape.ZB_dash, self.second_formula[6], RED_A),
+            (x_shape.ZB, self.second_formula[4], GREEN_A),
+        ]
+
+        for shape_element, formula_element, color in elements:
+            self.play(
+                Indicate(shape_element, color=color),
+                Indicate(formula_element, color=color, scale_factor=1.5),
+            )
+            self.wait()
+
+        self.play(
+            TransformMatchingTex(self.second_formula, self.general_formula_reversed)
+        )
+
+        self.play(
+            self.general_formula_reversed[0].animate.move_to(
+                self.general_formula_reversed[6]
+            ),
+            self.general_formula_reversed[6].animate.move_to(
+                self.general_formula_reversed[0]
+            ),
+        )
+
+        second_formula_flipped = ExtendedMathTex(
+            "{ZB", "\over", "AB}", "=", "{ZB'", "\over", "AB'}", color=BROWN
+        ).to_edge(DOWN)
+
+        second_formula_flipped[0, 2].set_color(OLIVE_GREEN)
+        second_formula_flipped[4, 6].set_color(FIRE_RED)
+
+        elements = [
+            (
+                x_shape.ZB,
+                self.general_formula_reversed[6],
+                second_formula_flipped[0],
+                GREEN_A,
+            ),
+            (
+                x_shape.AB,
+                self.general_formula_reversed[2],
+                second_formula_flipped[2],
+                GREEN_A,
+            ),
+            (
+                x_shape.ZB_dash,
+                self.general_formula_reversed[4],
+                second_formula_flipped[4],
+                RED_A,
+            ),
+            (
+                x_shape.AB_dash,
+                self.general_formula_reversed[0],
+                second_formula_flipped[6],
+                RED_A,
+            ),
+        ]
+
+        for shape_element, source_element, target_element, color in elements:
+            self.play(Indicate(shape_element, color=color))
+            self.play(ReplacementTransform(source_element, target_element))
+            self.wait()
+
+        self.play(
+            TransformMatchingTex(self.general_formula_reversed, second_formula_flipped)
+        )
+
+        self.wait()
+        self.play(TransformMatchingTex(second_formula_flipped, second_formula_copy))
+
+        self.play(
+            self.table.animate.scale(0.1).move_to(ORIGIN),
+            *[
+                previous_formulas[idx]
+                .animate.scale(0.1)
+                .set_opacity(1)
+                .move_to(self.cell_locations[position])
+                for idx, position in enumerate([(2, 2), (2, 3), (3, 2)])
+            ],
+            FadeOut(x_shape),
+            FadeOut(self.parallel_formula),
+            second_formula_copy.animate.scale(0.9).move_to(self.cell_locations[(3, 3)]),
+            FadeTransform(title, self.overview_title),
+        )
+
+        self.wait(3)
+        self.play(
+            Unwrite(
+                self.table, previous_formulas, second_formula_copy, self.overview_title
+            )
+        )
+        self.wait()
+
+
+class EndScene(AbstractScene):
+    def construct(self):
+        mcreature = MCreature("BROWN")
+        self.wait()
+        self.play(FadeIn(mcreature))
+        self.play(mcreature.speak("Danke für's Zuschauen!", font="Patrick Hand"))
+        self.play(mcreature.blink_eyes())
+        self.wait()
+        self.play(mcreature.blink_eyes())
+        self.play(
+            mcreature.speak(
+                "Bis zum nächsten Mal!", direction="DR", font="Patrick Hand"
+            )
+        )
+        self.wait()
+        self.play(mcreature.unspeak(), mcreature.unspeak())
+        self.wait()
+        self.play(mcreature.blink_eyes())
+        self.play(mcreature.write_text())
+        self.wait(2)
+        self.play(FadeOut(mcreature), mcreature.unwrite_text())
         self.wait(3)
 
 

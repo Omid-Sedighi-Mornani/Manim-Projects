@@ -13,3 +13,7 @@ class TestScene(Scene):
         self.camera.background_color = WHITE
         x_shape = XShape()
         self.add(x_shape)
+
+
+for idx, position in enumerate([(2, 2), (2, 3), (3, 2)]):
+    print(idx, "-", position)

@@ -3,10 +3,7 @@ import sys
 
 sys.path.append("/Users/omidsedighi-mornani/Desktop/mathe/PROJECTS")
 from Library.list_utils import ExtendedVGroup
-
-BROWN = ManimColor("#4e3629")
-OLIVE_GREEN = ManimColor("#6b8e23")
-FIRE_RED = ManimColor("#f44336")
+from Library.extended_colors import *
 
 
 class InterceptShape(ExtendedVGroup):

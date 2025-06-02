@@ -117,7 +117,7 @@ class IntroScene(AbstractScene):
         )
 
         self.play(
-            ReplacementTransform(v_shape.dots.copy(), x_shape.dots.copy()),
+            ReplacementTransform(v_shape.dots.copy(), x_shape.dots),
             ReplacementTransform(v_shape.line1.copy(), x_shape.line1),
             ReplacementTransform(v_shape.line2.copy(), x_shape.line2),
             ReplacementTransform(v_shape.ray1.copy(), x_shape.ray1),
@@ -197,6 +197,15 @@ class IntroScene(AbstractScene):
         )
 
         self.wait(3)
+        self.play(
+            FadeOut(v_shape),
+            FadeOut(x_shape),
+            Unwrite(self.overview_title),
+            Unwrite(self.parallel_formula),
+            Unwrite(self.first_formula),
+            Unwrite(self.second_formula),
+        )
+        self.wait()
 
 
 class FirstScene(AbstractScene):
@@ -668,9 +677,10 @@ class FourthScene(AbstractScene):
 
         self.wait(3)
         self.play(
-            Unwrite(
-                self.table, previous_formulas, second_formula_copy, self.overview_title
-            )
+            Unwrite(self.table),
+            Unwrite(previous_formulas),
+            Unwrite(second_formula_copy),
+            Unwrite(self.overview_title),
         )
         self.wait()
 
@@ -704,6 +714,23 @@ class SummaryScene(AbstractScene):
         pass
 
 
-class Thumbnail(Scene):
+class Thumbnail(AbstractScene):
     def construct(self):
-        pass
+        v_shape = VShape().scale(1.4).move_to(ORIGIN).shift(0.1 * DOWN)
+        mcreature = MCreature(theme="BROWN").to_corner(DL)
+        mcreature.add_speech(
+            "leicht gemacht!",
+            font="Patrick Hand",
+            direction="DR",
+        )
+        VGroup(self.first_formula, self.second_formula).scale(1.2).arrange(
+            DOWN
+        ).to_edge(RIGHT)
+        self.add(
+            v_shape,
+            self.overview_title.scale(1.5),
+            mcreature,
+            self.first_formula,
+            self.second_formula,
+        )
+        self.remove(v_shape.label_line1, v_shape.label_line2)

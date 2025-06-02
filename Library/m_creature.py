@@ -9,17 +9,10 @@ from extended_colors import *
 class Test(Scene):
     def construct(self):
         mcreature = MCreature(theme="GRAY")
-        self.play(FadeIn(mcreature))
-        self.play(mcreature.write_text(text="athe ist leicht", duration=2))
-        # self.play(mcreature.speak("Hello!",direction="UL"))
-        # self.play(mcreature.speak("Test!",direction="DL"))
-        # self.play(mcreature.speak("Test2!",direction="DR"))
-        self.play(mcreature.speak("Test3!", direction="UR"))
-        self.play(mcreature.move_iris(UP))
-        # self.play(mcreature.roll_eyes())
-        self.wait()
-        self.play(mcreature.move_iris(DOWN))
+        mcreature.add_speech("Hallo!")
         self.wait(1)
+        self.play(mcreature.write_text())
+        self.wait(3)
 
 
 class MCreature(VMobject):
@@ -72,6 +65,18 @@ class MCreature(VMobject):
             "color_text": DARK_BROWN,
             "color_speechbubble": BROWN,
             "color_speechtext": BROWN,
+        },
+        "BLUE": {
+            "fillcolor_eyes": BLUE_A,
+            "color_eyes": BLUE_E,
+            "fillcolor_iris": PENN_BLUE,
+            "color_iris": PENN_BLUE,
+            "fillcolor_eyebrows": BLUE_E,
+            "color_eyebrows": BLUE_E,
+            "color_mshape": DARK_BLUE,
+            "color_text": PENN_BLUE,
+            "color_speechbubble": PENN_BLUE,
+            "color_speechtext": PENN_BLUE,
         },
     }
 
@@ -179,7 +184,7 @@ class MCreature(VMobject):
         self.left_eyebrow.set(z_index=4)
         self.right_eyebrow.set(z_index=4)
 
-        self.speech_bubbles = []
+        self.speech_bubbles = VGroup()
 
         self.add(self.creatureM)
 
@@ -262,6 +267,7 @@ class MCreature(VMobject):
         duration=1,
         func=smooth,
         size=DEFAULT_FONT_SIZE,
+        scale_factor=1,
         font="Chalkboard",
         direction="UR",
     ) -> Animation:
@@ -286,11 +292,12 @@ class MCreature(VMobject):
 
         speech_bubble = (
             SpeechBubble(text, font_size=size, text_font=font, alignment=lineAlignment)
+            .scale(scale_factor=scale_factor)
             .next_to(self.creatureM, bubbleSide)
             .shift(shiftingFactor)
             .set(color=MCreature.THEMES[self.theme]["color_speechbubble"])
         )
-        self.speech_bubbles.append(speech_bubble)
+        self.speech_bubbles.add(speech_bubble)
 
         return AnimationGroup(speech_bubble.speak(duration))
 
@@ -316,7 +323,9 @@ class MCreature(VMobject):
 
     def unspeak(self, duration=1, element=-1) -> Animation:
         try:
-            return AnimationGroup(self.speech_bubbles.pop(element).unspeak())
+            return AnimationGroup(
+                self.speech_bubbles.submobjects.pop(element).unspeak()
+            )
         except:
             raise Exception("MCreature does not have any speech bubbles to unspeak!")
 
@@ -326,8 +335,17 @@ class MCreature(VMobject):
         duration=1,
         func=smooth,
         size=DEFAULT_FONT_SIZE,
+        scale_factor=1,
         font="Chalkboard",
         direction="UR",
     ):
-        self.speak(text, duration, func, size, font, direction)
+        self.speak(
+            text=text,
+            duration=duration,
+            func=func,
+            size=size,
+            scale_factor=scale_factor,
+            font=font,
+            direction=direction,
+        )
         self.add(self.speech_bubbles[-1])

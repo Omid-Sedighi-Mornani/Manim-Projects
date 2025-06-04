@@ -1,11 +1,10 @@
 from manim import *
 import sys
 import random
-from MF_Tools import *
 
 sys.path.append("/Users/omidsedighi-mornani/Desktop/mathe/PROJECTS")
 from Library.m_creature import MCreature
-from Library.list_utils import ExtendedMathTex, ExtendedVGroup, ExtendedText
+from Library.list_utils import ExtendedMathTex, ExtendedVGroup
 from Library.extended_colors import *
 
 # set random seed
@@ -15,13 +14,17 @@ random.seed(69)
 class AbstractScene(Scene):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        frame = SVGMobject("assets/whiteboard.svg")
+        self.frame = SVGMobject("assets/whiteboard.svg")
 
-        frame.stretch_to_fit_height(config.frame_height)
-        frame.stretch_to_fit_width(config.frame_width)
-        frame.set_z_index(-99)
+        self.frame.stretch_to_fit_height(config.frame_height)
+        self.frame.stretch_to_fit_width(config.frame_width)
+        self.frame.set_z_index(-99)
 
-        self.add(frame)
+        self.add(self.frame)
+
+        self.label_constructor = lambda text, **kwargs: Text(
+            text, font="Patrick Hand", **kwargs
+        )
 
 
 class IntroScene(AbstractScene):
@@ -46,9 +49,9 @@ class IntroScene(AbstractScene):
                     "3", "\cdot", "x", "-", "5", "\cdot", "x", color=PENN_BLUE
                 ),
             )
-            .scale(1.3)
+            .scale(1.5)
             .arrange(DOWN)
-            .shift(0.5 * UP)
+            .next_to(title, direction=DOWN, buff=0.35)
         )
 
         terms_simplified = (
@@ -57,9 +60,9 @@ class IntroScene(AbstractScene):
                 ExtendedMathTex("3", "\cdot", "x", "+", "15", color=PENN_BLUE),
                 ExtendedMathTex("-2", "x", color=PENN_BLUE),
             )
-            .scale(1.3)
+            .scale(1.5)
             .arrange(DOWN)
-            .shift(0.5 * UP)
+            .move_to(terms)
         )
 
         self.play(Write(title))
@@ -72,16 +75,12 @@ class IntroScene(AbstractScene):
 
         self.wait()
 
-        mcreature = MCreature(theme="BLUE").scale(0.8)
+        mcreature = MCreature(theme="BLUE").to_edge(DL)
 
         self.play(DrawBorderThenFill(mcreature))
         self.play(mcreature.blink_eyes())
         self.play(mcreature.move_iris(UR))
-        self.play(
-            mcreature.speak(
-                "Buchstaben??", font="Patrick Hand", direction="DR", scale_factor=0.7
-            )
-        )
+        self.play(mcreature.speak("Buchstaben??", direction="DR", scale_factor=0.7))
         self.play(mcreature.move_iris(DL))
 
         transform_indices = [[0, 1, 3, 4], [0, 1, 2, 3]]
@@ -95,13 +94,14 @@ class IntroScene(AbstractScene):
             FadeOut(terms[1][2, 5, 6]),
             TransformMatchingTex(terms[2], terms_simplified[2]),
         )
-        surr_rect = SurroundingRectangle(terms_simplified, color=BLUE_E, buff=0.3)
+        surr_rect = SurroundingRectangle(
+            terms_simplified, color=GRAY_A, fill_opacity=0.3, buff=0.3
+        )
         self.play(Create(surr_rect))
 
         self.play(
             mcreature.speak(
                 "Zusammenfassen??",
-                font="Patrick Hand",
                 direction="UR",
                 scale_factor=0.7,
             ),
@@ -154,7 +154,9 @@ class FirstScene(AbstractScene):
 
         braces = VGroup(
             *[
-                BraceLabel(natural_term[i], text=text)
+                BraceLabel(
+                    natural_term[i], text=text, label_constructor=self.label_constructor
+                )
                 for i, text in enumerate(["1.Operand", "Operation", "2.Operand"])
             ]
         )
@@ -164,15 +166,31 @@ class FirstScene(AbstractScene):
         self.play(FadeIn(braces))
 
         self.play(braces[0].animate.set(brace_text="Test!"))
-
+        brace = BraceLabel(
+            natural_term,
+            "Produkt",
+            brace_direction=UP,
+            label_constructor=self.label_constructor,
+        ).set_color(PENN_BLUE)
         natural_term.save_state()
-        for operation in ["+", "-", "\div"]:
+        self.play(FadeIn(brace))
+        for operation, name in [
+            ("+", "Summe"),
+            ("-", "Differenz"),
+            ("\div", "Quotient"),
+        ]:
             self.wait(0.5)
             self.play(
-                Transform(natural_term[1], ExtendedMathTex(operation, color=GREEN_E))
+                Transform(natural_term[1], ExtendedMathTex(operation, color=GREEN_E)),
+                Transform(
+                    brace.label,
+                    self.label_constructor(name, color=PENN_BLUE).next_to(
+                        brace.brace, UP
+                    ),
+                ),
             )
         self.wait(1)
-        self.play(Restore(natural_term))
+        self.play(Restore(natural_term), FadeOut(brace))
         self.wait(1)
 
         complex_term = ExtendedMathTex(
@@ -192,8 +210,15 @@ class FirstScene(AbstractScene):
         self.play(complex_term.animate.arrange(RIGHT, buff=1))
 
         braces = ExtendedVGroup(
-            BraceLabel(complex_term, "Summe", buff=1.2).set_color(PENN_BLUE),
-            BraceLabel(complex_term[2:], "Produkt").set_color(PENN_BLUE),
+            BraceLabel(
+                complex_term,
+                "Summe",
+                buff=1.2,
+                label_constructor=self.label_constructor,
+            ).set_color(GREEN_E),
+            BraceLabel(
+                complex_term[2:], "Produkt", label_constructor=self.label_constructor
+            ).set_color(RED_E),
         )
 
         self.play(Indicate(complex_term[3], scale_factor=1.5, color=RED_E))
@@ -214,7 +239,12 @@ class FirstScene(AbstractScene):
             ReplacementTransform(complex_term[:2], complex_term2[:2]),
             FadeOut(braces[1]),
             Transform(
-                braces[0], BraceLabel(complex_term2, text="Summe").set_color(PENN_BLUE)
+                braces[0],
+                BraceLabel(
+                    complex_term2,
+                    text="Summe",
+                    label_constructor=self.label_constructor,
+                ).set_color(GREEN_E),
             ),
         )
         self.wait()
@@ -257,7 +287,10 @@ class SecondScene(AbstractScene):
         braces = ExtendedVGroup(
             *[
                 BraceLabel(
-                    variable_term[i], text, brace_direction=DOWN if i % 2 == 0 else UP
+                    variable_term[i],
+                    text,
+                    brace_direction=DOWN if i % 2 == 0 else UP,
+                    label_constructor=self.label_constructor,
                 ).set_color(PENN_BLUE)
                 for i, text in enumerate(
                     ["Zahl", "1.Operand", "Variable", "2.Operand", "Zahl"]
@@ -297,13 +330,21 @@ class SecondScene(AbstractScene):
             ReplacementTransform(variable_term[3:], variable_term_simplified[2:]),
         )
 
-        brace = BraceLabel(variable_term_simplified, "Summe").set_color(PENN_BLUE)
+        brace = BraceLabel(
+            variable_term_simplified, "Summe", label_constructor=self.label_constructor
+        ).set_color(PENN_BLUE)
         braces = ExtendedVGroup(
-            BraceLabel(variable_term_simplified[:2], "x", brace_direction=UP).set_color(
-                RED_E
-            ),
             BraceLabel(
-                variable_term_simplified[3], "Zahl", brace_direction=UP
+                variable_term_simplified[:2],
+                "x",
+                brace_direction=UP,
+                label_constructor=self.label_constructor,
+            ).set_color(RED_E),
+            BraceLabel(
+                variable_term_simplified[3],
+                "Zahl",
+                brace_direction=UP,
+                label_constructor=self.label_constructor,
             ).set_color(GREEN_E),
         )
         self.play(FadeIn(brace))
@@ -337,7 +378,11 @@ class SecondScene(AbstractScene):
             ),
             Transform(
                 brace,
-                BraceLabel(variable_term_simplified, "Differenz").set_color(PENN_BLUE),
+                BraceLabel(
+                    variable_term_simplified,
+                    "Differenz",
+                    label_constructor=self.label_constructor,
+                ).set_color(PENN_BLUE),
             ),
         )
 
@@ -362,7 +407,11 @@ class SecondScene(AbstractScene):
             ),
             Transform(
                 brace,
-                BraceLabel(variable_term_simplified, "Produkt").set_color(PENN_BLUE),
+                BraceLabel(
+                    variable_term_simplified,
+                    "Produkt",
+                    label_constructor=self.label_constructor,
+                ).set_color(PENN_BLUE),
             ),
             mcreature.speak(
                 "Anders sieht das bei\n<b>Produkten und Quotienten</b> aus!",
@@ -491,9 +540,9 @@ class ThirdScene(AbstractScene):
         ]
         braces = ExtendedVGroup(
             *[
-                BraceLabel(terms[0][idx], txt).set_color(
-                    RED_E if txt == "x" else GREEN_E
-                )
+                BraceLabel(
+                    terms[0][idx], txt, label_constructor=self.label_constructor
+                ).set_color(RED_E if txt == "x" else GREEN_E)
                 for idx, txt in braces_indices
             ]
         )
@@ -507,7 +556,9 @@ class ThirdScene(AbstractScene):
             t[0][0].set_color(RED_E)
 
         self.play(TransformMatchingTex(terms[0], terms_simplified[0]))
-        brace = BraceLabel(terms_simplified[0][1:], "Zahl").set_color(GREEN_E)
+        brace = BraceLabel(
+            terms_simplified[0][1:], "Zahl", label_constructor=self.label_constructor
+        ).set_color(GREEN_E)
 
         self.play(FadeIn(brace), Indicate(terms_simplified[0][1:], color=GREEN))
         self.wait()
@@ -537,7 +588,10 @@ class ThirdScene(AbstractScene):
         braces = ExtendedVGroup(
             *[
                 BraceLabel(
-                    terms[1][idx], txt, buff=0.2 if txt == "x" else 0.1
+                    terms[1][idx],
+                    txt,
+                    buff=0.2 if txt == "x" else 0.1,
+                    label_constructor=self.label_constructor,
                 ).set_color(
                     RED_E if txt == "y" else GREEN_E if txt == "x" else PENN_BLUE
                 )
@@ -636,8 +690,8 @@ class FourthScene(AbstractScene):
         task_formulation = (
             MarkupText(
                 "\n".join(speech_texts).replace("\n", " ", 1),
-                color=DARK_BLUE,
-                stroke_color=DARK_BLUE,
+                color=PENN_BLUE,
+                stroke_color=PENN_BLUE,
                 font="Chalkboard",
             )
             .scale(0.6)
@@ -677,7 +731,7 @@ class FourthScene(AbstractScene):
 
         self.play(
             *[
-                TransformMatchingShapes(bubble.textBox.copy(), task_formulation)
+                ReplacementTransform(bubble.textBox.copy(), task_formulation)
                 for bubble in mcreature.speech_bubbles
             ],
             mcreature.unspeak(),
@@ -699,10 +753,6 @@ class FourthScene(AbstractScene):
 
         self.play(Write(term_basic[:3]))
 
-        label_constructor = lambda text, **kwargs: Text(
-            text, font="Patrick Hand", **kwargs
-        )
-
         label_texts = [
             "Preis pro Kind",
             "Anzahl Kinder",
@@ -716,7 +766,7 @@ class FourthScene(AbstractScene):
                     term_basic[2 * i],
                     label_text,
                     brace_direction=DOWN if i % 2 == 0 else UP,
-                    label_constructor=label_constructor,
+                    label_constructor=self.label_constructor,
                     font_size=24,
                 )
                 for i, label_text in enumerate(label_texts)
@@ -835,4 +885,43 @@ class EndScene(AbstractScene):
 
 class Thumbnail(AbstractScene):
     def construct(self):
-        pass
+        mcreature = MCreature(theme="BLUE").to_corner(DL)
+        self.camera.background_color = "#abd2fa"
+        self.add(mcreature)
+        mcreature.add_speech("Terme??", scale_factor=0.8)
+        mcreature.add_speech("Was ist das??", scale_factor=0.8, direction="DR")
+        mcreature.speech_bubbles[0].shift(0.5 * DOWN)
+        mcreature.static_move_iris(UR)
+        mcreature.static_move_eyebrows(direction=UP)
+
+        term = ExtendedMathTex("3x", "+", "2y", "+", "7x", color=PENN_BLUE).scale(2)
+        term[0, 4].set_color(GREEN_E)
+        term[2].set_color(RED_E)
+        self.frame.scale(0.5)
+        self.frame[0].set_fill_color("#faffff")
+        VGroup(self.frame, term).shift(UR + 2 * RIGHT)
+        table_title = Text(
+            "Vereinfache:", font="Patrick Hand", color=PENN_BLUE, font_size=64
+        )
+        table_title.move_to(self.frame.get_top(), aligned_edge=UP).shift(0.2 * DOWN)
+
+        ellipse = Ellipse(
+            width=term.width * 1.3,
+            height=term.height * 1.7,
+            color=PENN_BLUE,
+            fill_color=BLUE_A,
+            stroke_width=6,
+            fill_opacity=0.2,
+        ).move_to(term)
+        curved_arrow = CurvedArrow(
+            LEFT, RIGHT, angle=-TAU / 4, color=PENN_BLUE, stroke_width=8
+        ).next_to(ellipse, direction=LEFT, aligned_edge=UP, buff=-0.2)
+
+        question = Text(
+            "Kannst du das\nlösen?",
+            color=PENN_BLUE,
+            font="Patrick Hand",
+            should_center=True,
+            font_size=64,
+        ).next_to(curved_arrow, direction=LEFT, buff=0)
+        self.add(term, table_title, question, curved_arrow, ellipse)

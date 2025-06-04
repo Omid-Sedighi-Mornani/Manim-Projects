@@ -82,7 +82,7 @@ class MCreature(VMobject):
 
     def __init__(self, theme="DEFAULT", **kwargs):
 
-        self.theme = theme
+        self.theme = theme.upper()
 
         super().__init__(**kwargs)
 
@@ -349,3 +349,13 @@ class MCreature(VMobject):
             direction=direction,
         )
         self.add(self.speech_bubbles[-1])
+
+    def static_move_iris(self, direction):
+        self.left_pupil.shift(direction * 0.1)
+        self.right_pupil.shift(direction * 0.1)
+
+        return self
+
+    def static_move_eyebrows(self, direction=UP):
+        self.left_eyebrow.shift(direction * 0.1),
+        self.right_eyebrow.shift(direction * 0.1),

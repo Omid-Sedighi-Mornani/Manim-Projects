@@ -327,8 +327,294 @@ class SecondScene(AbstractScene):
         )
 
         self.play(mcreature.blink_eyes())
+        self.play(mcreature.unspeak(duration=2))
+
+        self.play(
+            Transform(
+                variable_term_simplified[2],
+                ExtendedMathTex("-", color=PENN_BLUE)
+                .scale(1.5)
+                .move_to(variable_term_simplified[2]),
+            ),
+            Transform(
+                brace,
+                BraceLabel(variable_term_simplified, "Differenz").set_color(PENN_BLUE),
+            ),
+        )
+
+        self.play(
+            mcreature.speak(
+                "Summen und Differenzen kann man\n<b>nur mit gleichen Familien</b> zusammenfassen!",
+                direction="DR",
+                scale_factor=0.6,
+                duration=2,
+            ),
+        )
 
         self.wait()
+        self.play(mcreature.blink_eyes(), mcreature.unspeak(duration=2))
+
+        self.play(
+            Transform(
+                variable_term_simplified[2],
+                ExtendedMathTex("\cdot", color=PENN_BLUE)
+                .scale(1.5)
+                .move_to(variable_term_simplified[2]),
+            ),
+            Transform(
+                brace,
+                BraceLabel(variable_term_simplified, "Produkt").set_color(PENN_BLUE),
+            ),
+            mcreature.speak(
+                "Anders sieht das bei\n<b>Produkten und Quotienten</b> aus!",
+                scale_factor=0.6,
+                direction="DR",
+                duration=2,
+            ),
+        )
+
+        variable_term2 = ExtendedMathTex(
+            "5", "\cdot", "x", "\cdot", "2", color=PENN_BLUE
+        ).scale(1.5)
+
+        variable_term2_simplified = ExtendedMathTex(
+            "10", "\cdot", "x", color=PENN_BLUE
+        ).scale(1.5)
+
+        variable_term2_finished = ExtendedMathTex("10", "x", color=PENN_BLUE).scale(1.5)
+
+        self.play(
+            FadeOut(braces, brace),
+            TransformMatchingTex(variable_term_simplified, variable_term2),
+        )
+
+        self.wait()
+        self.play(
+            TransformMatchingTex(
+                variable_term2, variable_term2_simplified, transform_mismatches=True
+            )
+        )
+        self.wait()
+        self.play(
+            TransformMatchingTex(variable_term2_simplified, variable_term2_finished)
+        )
+
+        self.play(
+            ReplacementTransform(
+                title,
+                Text(
+                    "Jetzt bist du dran!", font="Patrick Hand", color=PENN_BLUE
+                ).to_edge(UP),
+            ),
+            mcreature.unspeak(duration=2),
+            Unwrite(variable_term2_finished),
+        )
+
+        self.wait(3)
+
+
+class ThirdScene(AbstractScene):
+    def construct(self):
+        title = Text(
+            "Jetzt bist du dran!",
+            font="Patrick Hand",
+            color=PENN_BLUE,
+            stroke_color=PENN_BLUE,
+        ).to_edge(UP)
+        mcreature = MCreature(theme="BLUE").to_edge(DL)
+        self.add(title, mcreature)
+        self.play(
+            mcreature.speak(
+                "Kannst du diese beiden Terme zusammenfassen?",
+                scale_factor=0.6,
+                duration=2,
+                direction="DR",
+            )
+        )
+
+        terms = ExtendedVGroup(
+            ExtendedMathTex("2", "x", "+", "1", "-", "x", "+", "3"),
+            ExtendedMathTex("4", "y", "\cdot", "3", "x", "+", "4", "x", "y"),
+        )
+
+        terms_simplified = ExtendedVGroup(
+            ExtendedMathTex("x", "+", "1", "+", "3"),
+            ExtendedMathTex("12", "x", "y", "+", "4", "x", "y"),
+        )
+
+        terms_finished = ExtendedVGroup(
+            ExtendedMathTex("x", "+", "4"),
+            ExtendedMathTex("16", "x", "y"),
+        )
+
+        for t in [terms, terms_simplified, terms_finished]:
+            t.scale(1.5).arrange(DOWN, buff=0.5).shift(UP).set_color(PENN_BLUE)
+
+        self.play(Write(terms), run_time=2)
+        self.wait()
+
+        self.play(
+            mcreature.speak(
+                "<b>Tipp:</b> Alle Teilterme mit <b>x</b> und <b>y</b>\nsind auch zwei verschiedene Familien!",
+                duration=2,
+                scale_factor=0.6,
+            ),
+            mcreature.speech_bubbles.animate.arrange(
+                UP, buff=0.1, aligned_edge=LEFT
+            ).next_to(mcreature),
+        )
+
+        D_BLUE = "#5D6B75"
+        pause = SVGMobject("assets/pause.svg", fill_opacity=0.6).scale(2)
+        pause[0].set_fill(D_BLUE)
+
+        self.play(FadeIn(pause))
+        self.wait(5)
+
+        self.play(FadeOut(pause))
+
+        self.play(
+            mcreature.unspeak(),
+            mcreature.unspeak(),
+            FadeOut(mcreature, terms[1]),
+            terms[0].animate.move_to(ORIGIN),
+        )
+
+        coloring = [([0, 1, 4, 5], RED_E), ([2, 3, 6, 7], GREEN_E)]
+
+        self.play(*[terms[0][idx].animate.set_color(clr) for idx, clr in coloring])
+
+        braces_indices = [
+            ([0, 1], "x"),
+            ([2, 3], "Zahl"),
+            ([4, 5], "x"),
+            ([6, 7], "Zahl"),
+        ]
+        braces = ExtendedVGroup(
+            *[
+                BraceLabel(terms[0][idx], txt).set_color(
+                    RED_E if txt == "x" else GREEN_E
+                )
+                for idx, txt in braces_indices
+            ]
+        )
+
+        self.play(FadeIn(braces))
+        self.play(Indicate(terms[0][0, 1, 4, 5], color=RED))
+        self.play(FadeOut(braces))
+
+        for t in terms_simplified, terms_finished:
+            t[0].move_to(terms[0]).set_color(GREEN_E)
+            t[0][0].set_color(RED_E)
+
+        self.play(TransformMatchingTex(terms[0], terms_simplified[0]))
+        brace = BraceLabel(terms_simplified[0][1:], "Zahl").set_color(GREEN_E)
+
+        self.play(FadeIn(brace), Indicate(terms_simplified[0][1:], color=GREEN))
+        self.wait()
+        self.play(
+            TransformMatchingTex(terms_simplified[0], terms_finished[0]), FadeOut(brace)
+        )
+
+        surr_Rect = SurroundingRectangle(
+            terms_finished[0], color=GREY_A, fill_opacity=0.1
+        )
+
+        self.play(DrawBorderThenFill(surr_Rect))
+
+        self.wait()
+        self.play(Unwrite(terms_finished[0]), Uncreate(surr_Rect))
+
+        for t in terms[1], terms_simplified[1], terms_finished[1]:
+            t.move_to(ORIGIN)
+
+        self.play(Write(terms[1]))
+
+        coloring = [([0, 1, 8], RED_E), ([3, 4, 7], "GREEN_E")]
+
+        self.play(*[terms[1][idx].animate.set_color(clr) for idx, clr in coloring])
+
+        braces_indices = [([0, 1], "y"), ([3, 4], "x"), ([7, 8], "xy")]
+        braces = ExtendedVGroup(
+            *[
+                BraceLabel(
+                    terms[1][idx], txt, buff=0.2 if txt == "x" else 0.1
+                ).set_color(
+                    RED_E if txt == "y" else GREEN_E if txt == "x" else PENN_BLUE
+                )
+                for idx, txt in braces_indices
+            ]
+        )
+
+        mcreature = MCreature(theme="BLUE").to_corner(DL)
+
+        self.play(FadeIn(braces))
+        self.wait()
+        self.play(FadeIn(mcreature))
+        self.wait(0.5)
+        self.play(
+            mcreature.speak(
+                "<b>Erinnerung:</b> Mit dem &#183; Zeichen\nkann man Familien verschmelzen!",
+                direction="DR",
+                scale_factor=0.6,
+                duration=2,
+            ),
+            mcreature.blink_eyes(),
+        )
+
+        self.play(
+            Indicate(terms[1][0, 1], color=RED), Indicate(terms[1][3, 4], color=GREEN)
+        )
+
+        brace = braces[2].copy().next_to(terms_simplified[1][:4], direction=DOWN)
+
+        for t in terms_simplified[1], terms_finished[1]:
+            t.set_color_by_tex("x", GREEN_E)
+            t.set_color_by_tex("y", RED_E)
+
+        self.play(
+            FadeOut(braces[0, 1]),
+            braces[2].animate.next_to(terms_simplified[1][5:], direction=DOWN),
+            ReplacementTransform(braces[2].copy(), brace),
+            ReplacementTransform(terms[1][0, 3], terms_simplified[1][0]),
+            ReplacementTransform(terms[1][4, 1], terms_simplified[1][1, 2]),
+            ReplacementTransform(terms[1][5:], terms_simplified[1][3:]),
+            FadeOut(terms[1][2]),
+        )
+        self.play(mcreature.unspeak())
+        self.play(mcreature.blink_eyes())
+        self.play(
+            mcreature.speak(
+                "<b>xy</b> ist wieder eine Familie!",
+                scale_factor=0.6,
+                duration=2,
+                direction="DR",
+            ),
+        )
+
+        self.wait()
+        self.play(
+            TransformMatchingTex(
+                terms_simplified[1], terms_finished[1], transform_mismatches=True
+            ),
+            FadeOut(braces[2], brace),
+        )
+
+        surr_Rect = SurroundingRectangle(
+            terms_finished[1], color=GREY_A, fill_opacity=0.1
+        )
+
+        self.play(DrawBorderThenFill(surr_Rect))
+
+        self.play(mcreature.blink_eyes())
+
+        self.play(
+            Uncreate(surr_Rect),
+            Unwrite(terms_finished[1]),
+            Unwrite(title),
+            mcreature.unspeak(),
+            FadeOut(mcreature),
+        )
 
         self.wait(3)
 

@@ -15,7 +15,6 @@ random.seed(69)
 class AbstractScene(Scene):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.camera.background_color = RED
         frame = SVGMobject("assets/whiteboard.svg")
 
         frame.stretch_to_fit_height(config.frame_height)
@@ -616,6 +615,221 @@ class ThirdScene(AbstractScene):
             FadeOut(mcreature),
         )
 
+        self.wait(3)
+
+
+class FourthScene(AbstractScene):
+    def construct(self):
+        title = Text(
+            "Term aufstellen",
+            font="Patrick Hand",
+            color=PENN_BLUE,
+            stroke_color=PENN_BLUE,
+        ).to_edge(UP)
+        mcreature = MCreature(theme="BLUE").to_corner(DL)
+
+        speech_texts = [
+            "Ein Kino verlangt 8€ Eintritt pro Kind\nund 12€ pro Erwachsenen.",
+            "Stelle einen Term für die Gesamtkosten für\n<b>k</b> Kinder und <b>e</b> Erwachsene auf!",
+        ]
+
+        task_formulation = (
+            MarkupText(
+                "\n".join(speech_texts).replace("\n", " ", 1),
+                color=DARK_BLUE,
+                stroke_color=DARK_BLUE,
+                font="Chalkboard",
+            )
+            .scale(0.6)
+            .next_to(title, direction=DOWN)
+        )
+
+        term_basic = (
+            ExtendedMathTex(
+                "8",
+                "\cdot",
+                "4",
+                "+",
+                "12",
+                "\cdot",
+                "2",
+                "=",
+                "50",
+                color=PENN_BLUE,
+            )
+            .scale(1.5)
+            .arrange(RIGHT, buff=0.5)
+        )
+
+        term_variable = ExtendedMathTex(
+            "8", "k", "+", "12", "e", color=PENN_BLUE
+        ).scale(1.5)
+
+        self.play(Write(title))
+        self.wait()
+        self.play(FadeIn(mcreature))
+        self.play(mcreature.speak(speech_texts[0], scale_factor=0.6, duration=3))
+        self.play(
+            mcreature.speak(
+                speech_texts[1], scale_factor=0.6, direction="DR", duration=3
+            )
+        )
+
+        self.play(
+            *[
+                TransformMatchingShapes(bubble.textBox.copy(), task_formulation)
+                for bubble in mcreature.speech_bubbles
+            ],
+            mcreature.unspeak(),
+            mcreature.unspeak(),
+        )
+
+        self.play(mcreature.blink_eyes())
+
+        self.play(
+            mcreature.speak(
+                "Beispiel für\n<b>4 Kinder</b> und <b>2 Erwachsene</b>!",
+                direction="DR",
+                scale_factor=0.6,
+                duration=2,
+            )
+        )
+
+        self.play(mcreature.blink_eyes())
+
+        self.play(Write(term_basic[:3]))
+
+        label_constructor = lambda text, **kwargs: Text(
+            text, font="Patrick Hand", **kwargs
+        )
+
+        label_texts = [
+            "Preis pro Kind",
+            "Anzahl Kinder",
+            "Preis pro Erwachsener",
+            "Anzahl Erwachsene",
+        ]
+
+        braces = ExtendedVGroup(
+            *[
+                BraceLabel(
+                    term_basic[2 * i],
+                    label_text,
+                    brace_direction=DOWN if i % 2 == 0 else UP,
+                    label_constructor=label_constructor,
+                    font_size=24,
+                )
+                for i, label_text in enumerate(label_texts)
+            ]
+        ).set_color(PENN_BLUE)
+
+        self.play(FadeIn(braces[0, 1]))
+        self.play(mcreature.blink_eyes())
+        self.play(FadeIn(term_basic[3]))
+        self.play(Write(term_basic[4:7]))
+        self.play(FadeIn(braces[2, 3]))
+        self.play(mcreature.blink_eyes())
+        self.play(
+            FadeIn(term_basic[7]), FadeTransform(term_basic[:7].copy(), term_basic[8])
+        )
+        self.play(mcreature.unspeak())
+        self.play(mcreature.blink_eyes())
+        self.wait(0.5)
+        self.play(
+            mcreature.speak(
+                "Es sind insgesamt 50 Euro!", scale_factor=0.6, direction="DR"
+            )
+        )
+        self.play(mcreature.blink_eyes())
+
+        self.wait()
+
+        self.play(mcreature.unspeak())
+        self.play(mcreature.blink_eyes())
+        self.play(
+            mcreature.speak(
+                "Jetzt stellen wir den Term\nfür allgemein <b>e</b> Erwachsene und <b>k</b> Kinder auf!",
+                scale_factor=0.6,
+                direction="DR",
+            )
+        )
+        self.play(FadeOut(term_basic[7:]))
+        self.play(Indicate(term_basic[2, 6], color=BLUE))
+        self.play(mcreature.blink_eyes())
+
+        tuple_k_e = [(2, 3), (1, 1), (5, 4), ("k", "e")]
+
+        for k, e in tuple_k_e:
+            self.play(
+                Transform(
+                    term_basic[2],
+                    ExtendedMathTex(k, color=PENN_BLUE)
+                    .scale(1.5)
+                    .move_to(term_basic[2]),
+                ),
+                Transform(
+                    term_basic[6],
+                    ExtendedMathTex(e, color=PENN_BLUE)
+                    .scale(1.5)
+                    .move_to(term_basic[6]),
+                ),
+            )
+            self.wait()
+
+        self.play(mcreature.blink_eyes())
+        self.play(
+            ReplacementTransform(term_basic[0, 2], term_variable[0, 1]),
+            ReplacementTransform(term_basic[3], term_variable[2]),
+            ReplacementTransform(term_basic[4, 6], term_variable[3, 4]),
+            FadeOut(term_basic[1, 5]),
+            FadeOut(braces),
+        )
+
+        surr_Rect = SurroundingRectangle(term_variable, color=GRAY_D, fill_opacity=0.2)
+
+        self.play(DrawBorderThenFill(surr_Rect))
+        self.play(mcreature.blink_eyes())
+        self.play(
+            Unwrite(task_formulation),
+            Unwrite(title),
+            Unwrite(term_variable),
+            FadeOut(mcreature),
+            mcreature.unspeak(),
+            Uncreate(surr_Rect),
+        )
+
+        self.wait(3)
+
+
+class EndScene(AbstractScene):
+    def construct(self):
+        mcreature = MCreature(theme="BLUE")
+        self.play(FadeIn(mcreature))
+
+        self.play(
+            mcreature.speak(
+                "Jetzt weißt du was Terme sind!",
+                scale_factor=0.6,
+                direction="DR",
+                duration=2,
+            )
+        )
+        self.play(mcreature.blink_eyes())
+        self.play(
+            mcreature.speak("Und wie man sie aufstellt!", scale_factor=0.6, duration=2)
+        )
+        self.play(mcreature.blink_eyes())
+        self.wait()
+        self.play(mcreature.unspeak(), mcreature.unspeak())
+        self.play(mcreature.blink_eyes())
+        self.play(
+            mcreature.speak("Bis zum nächsten Mal! ;)", scale_factor=0.6, duration=2)
+        )
+        self.wait()
+        self.play(mcreature.write_text(duration=2))
+
+        self.play(FadeOut(mcreature, mcreature.speech_bubbles, mcreature.text))
+        self.play(FadeOut(*self.mobjects))
         self.wait(3)
 
 

@@ -1,6 +1,4 @@
 from manim import Group, VGroup, MathTex, Text
-from typing import List
-from operator import itemgetter
 
 
 class ExtendingGroupClass:

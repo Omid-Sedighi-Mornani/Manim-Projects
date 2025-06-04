@@ -74,7 +74,7 @@ class MCreature(VMobject):
             "fillcolor_eyebrows": BLUE_E,
             "color_eyebrows": BLUE_E,
             "color_mshape": DARK_BLUE,
-            "color_text": PENN_BLUE,
+            "color_text": DARK_BLUE,
             "color_speechbubble": PENN_BLUE,
             "color_speechtext": PENN_BLUE,
         },
